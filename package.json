@@ -1,0 +1,21 @@
+{
+  "name": "nodejs-incidents",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/jkrs666/nodejs-incidents#readme",
+  "bugs": {
+    "url": "https://github.com/jkrs666/nodejs-incidents/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jkrs666/nodejs-incidents.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "modul",
+  "main": "index.mjs",
+  "scripts": {
+    "test": "node --test test/*.mjs",
+    "start": "node index.mjs"
+  }
+}
