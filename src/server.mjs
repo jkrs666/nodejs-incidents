@@ -12,23 +12,25 @@ const incidents = [
 ]
 
 const createIncident = async (req, res) => {
-	const incident = await getBody(req)
-	try {
-		validateIncident(incident)
-	} catch (err) {
-		res.statusCode = 400
-		return { error: `invalid request. ${err.message}` }
+	const incident = {
+		...await getBody(req),
+		id: crypto.randomUUID(),
+		createdAt: new Date().getTime(),
+		status: 'open'
 	}
+
+	const errors = validateIncident(incident)
+	if (errors.length > 0) {
+		res.statusCode = 400
+		return { error: errors }
+	}
+
 	incidents.push(incident)
-	return { message: `incident ${incident.id} inserted` }
+	return incident
 }
 
 const updateIncident = async (req, res, id) => {
 	const patchBody = await getBody(req)
-	const invalidFields = Object.keys(patchBody).filter(k => !['title', 'severity', 'status', 'createdAt'].includes(k))
-	if (invalidFields.length > 0) {
-		return { 'error': `invalid fields: ${invalidFields}` }
-	}
 
 	const i = incidents.findIndex(i => i.id === id)
 	if (i == -1) {
@@ -36,15 +38,17 @@ const updateIncident = async (req, res, id) => {
 		return { error: `incident ${id} not found` }
 	}
 
-	incidents[i] = { ...incidents[i], ...patchBody }
-	try {
-		validateIncident(incidents[i])
-	} catch (err) {
+	const incident = { ...incidents[i], ...patchBody }
+
+
+	const errors = validateIncident(incident)
+	if (errors.length > 0) {
 		res.statusCode = 400
-		return { error: `invalid request. ${err.message}` }
+		return { error: errors }
 	}
 
-	return m
+	incidents[i] = incident
+	return incidents[i]
 }
 
 const server = createServer(async (req, res) => {
@@ -63,7 +67,7 @@ const server = createServer(async (req, res) => {
 			case 'POST /incidents': return createIncident(req, res)
 			default: {
 				res.statusCode = 404
-				return { error: 'not found' }
+				return { error: `endpoint ${endpoint} not found` }
 			}
 		}
 	}

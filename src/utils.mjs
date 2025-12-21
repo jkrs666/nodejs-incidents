@@ -1,5 +1,3 @@
-import assert from 'node:assert/strict'
-
 const getBody = async (req) => {
 	const chunks = []
 	let size = 0
@@ -16,20 +14,30 @@ const getBody = async (req) => {
 const validateIncident = (incident) => {
 	const { id, title, severity, status, createdAt } = incident
 	const uuidRegex = /[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}/
+	const errors = []
 
-	assert(typeof id === 'string')
-	assert(uuidRegex.test(id))
+	const undefinedFields = Object.keys(incident).filter(k => !['id', 'title', 'severity', 'status', 'createdAt'].includes(k))
+	if (undefinedFields.length > 0)
+		errors.push(`undefined fields: ${undefinedFields}`)
 
-	assert(typeof title === 'string')
+	if (typeof id !== 'string' || !uuidRegex.test(id))
+		errors.push('"id" must be a valid UUID v4 string')
 
-	assert(typeof severity === 'string')
-	assert(['low', 'medium', 'high'].includes(severity))
+	if (typeof title !== 'string')
+		errors.push('"title" must be string')
 
-	assert(typeof status === 'string')
-	assert(['open', 'acknowledged', 'resolved'].includes(status))
+	if (typeof severity !== 'string' || !['low', 'medium', 'high'].includes(severity))
+		errors.push('"severity" must be "low", "medium" or "high"')
 
-	assert(typeof createdAt === 'number')
-	assert(createdAt > 0)
+	if (typeof status !== 'string' || !['open', 'acknowledged', 'resolved'].includes(status))
+		errors.push('"status" must be "open", "acknowledged" or "resolved"')
+
+	if (typeof createdAt !== 'number' || createdAt < 0)
+		errors.push('"createdAt" must be a Unix timestamp (integer, milliseconds)')
+
+	return errors
 }
+
+
 
 export { getBody, validateIncident }
