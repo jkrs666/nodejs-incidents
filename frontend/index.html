@@ -1,0 +1,30 @@
+<html>
+	<header>
+		<style>
+		tr,td {
+			padding: 1em;
+		}
+		</style>
+	</header>
+	<body>
+		<h1> incidents </h1>
+		<div>
+			<table>
+				<thead id="header">
+				</thead>
+				<tbody id="content">
+				</tbody>
+			</table>
+		</div>
+		<script type="module">
+			const res = await fetch('http://localhost:3000/incidents')
+			const incidents = JSON.parse(await res.text()).sort( (a,b) => b.id.localeCompare(a.id))
+			const thead = '<tr>' + Object.keys(incidents[0]).map( k => `<th>${k}</th>` ).join('') + '</tr>'
+			const tbody = incidents.map(i => '<tr>' +  Object.values(i).map(v => `<td>${v}</td>`).join('') + '</tr>').join('')
+			document.getElementById('header').innerHTML = thead
+			document.getElementById('content').innerHTML = tbody
+			console.log(incidents)
+		</script>
+	</body>
+</html>
+

@@ -32,6 +32,7 @@ const updateIncident = async (db, req, res, id) => {
 const server = createServer(async (req, res) => {
 	res.statusCode = 200
 	res.setHeader('Content-Type', 'application/json')
+	res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3001')
 
 	const dbClient = createDbClient()
 
