@@ -14,11 +14,8 @@ after(() => testServer.close())
 
 test('insert incident', async () => {
 	const incident = {
-		id: crypto.randomUUID(),
 		title: 'test',
 		severity: 'low',
-		status: 'open',
-		createdAt: 1777777777777
 	}
 
 	const response = await fetch(
@@ -29,7 +26,10 @@ test('insert incident', async () => {
 			body: JSON.stringify(incident)
 		})
 
+	const actual = JSON.parse(await response.text())
 	assert.strictEqual(response.status, 200)
+	assert.strictEqual(actual.acknowledged, true)
+	assert.match(actual.insertedId, /[a-f0-9]+/)
 })
 
 test('insert invalid incident', async () => {

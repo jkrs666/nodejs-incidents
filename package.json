@@ -17,5 +17,8 @@
   "scripts": {
     "test": "node --test test/*.mjs",
     "start": "node index.mjs"
+  },
+  "dependencies": {
+    "mongodb": "7.0"
   }
 }

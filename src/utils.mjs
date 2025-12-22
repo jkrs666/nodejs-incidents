@@ -1,3 +1,5 @@
+import { MongoClient } from 'mongodb'
+
 const getBody = async (req) => {
 	const chunks = []
 	let size = 0
@@ -11,17 +13,22 @@ const getBody = async (req) => {
 	return JSON.parse(Buffer.concat(chunks).toString())
 }
 
-const validateIncident = (incident) => {
-	const { id, title, severity, status, createdAt } = incident
-	const uuidRegex = /[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}/
+const isNullOrEmpty = (x) => x === undefined || x === null || x.length === 0
+
+const validatePostIncidentRequest = (req) => {
+	if (Object.keys(req).length === 0)
+		return ["empty request body"]
+
+	const { title, severity } = req
 	const errors = []
 
-	const undefinedFields = Object.keys(incident).filter(k => !['id', 'title', 'severity', 'status', 'createdAt'].includes(k))
+	const immutableFields = Object.keys(req).filter(k => ['id', 'createdAt', 'status'].includes(k))
+	if (immutableFields.length > 0)
+		errors.push(`can not set fields: ${immutableFields}`)
+
+	const undefinedFields = Object.keys(req).filter(k => !['id', 'createdAt', 'title', 'severity', 'status'].includes(k))
 	if (undefinedFields.length > 0)
 		errors.push(`undefined fields: ${undefinedFields}`)
-
-	if (typeof id !== 'string' || !uuidRegex.test(id))
-		errors.push('"id" must be a valid UUID v4 string')
 
 	if (typeof title !== 'string')
 		errors.push('"title" must be string')
@@ -29,15 +36,41 @@ const validateIncident = (incident) => {
 	if (typeof severity !== 'string' || !['low', 'medium', 'high'].includes(severity))
 		errors.push('"severity" must be "low", "medium" or "high"')
 
-	if (typeof status !== 'string' || !['open', 'acknowledged', 'resolved'].includes(status))
-		errors.push('"status" must be "open", "acknowledged" or "resolved"')
+	return errors
+}
 
-	if (typeof createdAt !== 'number' || createdAt < 0)
-		errors.push('"createdAt" must be a Unix timestamp (integer, milliseconds)')
+const validatePatchIncidentRequest = (req) => {
+	if (Object.keys(req).length === 0)
+		return ["empty request body"]
+
+	const { title, severity, status } = req
+	const errors = []
+
+	const immutableFields = Object.keys(req).filter(k => ['id', 'createdAt'].includes(k))
+	if (immutableFields.length > 0)
+		errors.push(`can not set fields: ${immutableFields}`)
+
+	const undefinedFields = Object.keys(req).filter(k => !['id', 'createdAt', 'title', 'severity', 'status'].includes(k))
+	if (undefinedFields.length > 0)
+		errors.push(`undefined fields: ${undefinedFields}`)
+
+	if (!isNullOrEmpty(title) && typeof title !== 'string')
+		errors.push('"title" must be string')
+
+	if (!isNullOrEmpty(severity) && (typeof severity !== 'string' || !['low', 'medium', 'high'].includes(severity)))
+		errors.push('"severity" must be "low", "medium" or "high"')
+
+	if (!isNullOrEmpty(status) && (typeof status !== 'string' || !['open', 'acknowledged', 'resolved'].includes(status)))
+		errors.push('"status" must be "open", "acknowledged" or "resolved"')
 
 	return errors
 }
 
+const createDbClient = () => {
+	const connectionString = 'mongodb://root:example@127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=nodejs_incidents'
+	return new MongoClient(connectionString)
+}
 
 
-export { getBody, validateIncident }
+
+export { getBody, validatePostIncidentRequest, validatePatchIncidentRequest, createDbClient }
