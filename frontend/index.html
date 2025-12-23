@@ -8,6 +8,7 @@
 	</header>
 	<body>
 		<h1> incidents </h1>
+		<button id="newIncident">New Incident</button
 		<div>
 			<table>
 				<thead id="header">
@@ -17,13 +18,67 @@
 			</table>
 		</div>
 		<script type="module">
+			const createNewIncident = async() => {
+				const res = await fetch(
+					`http://localhost:3000/incidents`,
+					{
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json'},
+						body: JSON.stringify(Object.fromEntries([["title","untitled"], ["severity", "low"]]))
+					}
+				)
+				console.log(res.status, JSON.parse(await res.text()))
+				window.location.reload()
+			}
+			const patchIncident = async (event) => {
+				const id = event.target.parentElement.parentElement.getAttribute('id')
+				const name = event.target.name
+				const value = event.target.value
+				const res = await fetch(
+					`http://localhost:3000/incidents/${id}`,
+					{
+						method: 'PATCH',
+						headers: { 'Content-Type': 'application/json'},
+						body: JSON.stringify(Object.fromEntries([[name,value]]))
+					}
+				)
+				console.log(id, value, name, res.status)
+			}
 			const res = await fetch('http://localhost:3000/incidents')
 			const incidents = JSON.parse(await res.text()).sort( (a,b) => b.id.localeCompare(a.id))
-			const thead = '<tr>' + Object.keys(incidents[0]).map( k => `<th>${k}</th>` ).join('') + '</tr>'
-			const tbody = incidents.map(i => '<tr>' +  Object.values(i).map(v => `<td>${v}</td>`).join('') + '</tr>').join('')
+			const thead = `<tr>${Object.keys(incidents[0]).slice(1).map( k => `<th>${k}</th>` ).join('')}</tr>`
+			const tbody = incidents.map(i => 
+			`<tr id="${i.id}">
+
+			<td>${i.createdAt}</td>
+
+			<td><input name="title" value="${i.title}"></input></td>
+
+			<td><select name="severity">
+			<option ${i.severity === 'low'? 'selected' : ''} value="low">low</option>
+			<option ${i.severity === 'medium'? 'selected' : ''} value="medium">medium</option>
+			<option ${i.severity === 'high'? 'selected' : ''} value="high">high</option>
+			</select>
+			</td>
+
+			<td><select name="status">
+			<option ${i.status === 'open'? 'selected' : ''} value="open">open</option>
+			<option ${i.status === 'acknowledged'? 'selected' : ''} value="acknowledged">acknowledged</option>
+			<option ${i.status === 'resolved'? 'selected' : ''} value="resolved">resolved</option>
+			</select>
+
+			</td>
+			</tr>`).join('')
 			document.getElementById('header').innerHTML = thead
 			document.getElementById('content').innerHTML = tbody
 			console.log(incidents)
+			for (let i of document.getElementsByTagName('input')){
+				i.onkeyup = patchIncident
+			}
+			for (let i of document.getElementsByTagName('select')){
+				i.onchange = patchIncident
+			}
+			document.getElementById("newIncident").onclick = createNewIncident
 		</script>
 	</body>
 </html>
