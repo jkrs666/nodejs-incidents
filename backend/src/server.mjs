@@ -33,24 +33,26 @@ const server = createServer(async (req, res) => {
 	res.statusCode = 200
 	res.setHeader('Content-Type', 'application/json')
 	res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3001')
+	res.setHeader("Access-Control-Allow-Methods", "GET, PATCH, POST, OPTIONS");
+	res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
 	const dbClient = createDbClient()
 
+
+
+
 	const router = async (endpoint) => {
-		let m = endpoint.match('PATCH /incidents/([a-z0-9-]+)')
+		if ((/OPTIONS \/incidents/).test(endpoint)) return
+		if (endpoint === 'GET /incidents') return repo.getAllIncidents(dbClient)
+		if (endpoint === 'POST /incidents') return createIncident(dbClient, req, res)
+		let m = endpoint.match('PATCH /incidents/([a-f0-9-]+)$')
 		if (m !== null) {
 			let [_, id] = m
 			return await updateIncident(dbClient, req, res, id)
 		}
 
-		switch (endpoint) {
-			case 'GET /incidents': return repo.getAllIncidents(dbClient)
-			case 'POST /incidents': return createIncident(dbClient, req, res)
-			default: {
-				res.statusCode = 404
-				return { error: `endpoint ${endpoint} not found` }
-			}
-		}
+		res.statusCode = 404
+		return { error: `endpoint ${endpoint} not found` }
 	}
 
 	try {
