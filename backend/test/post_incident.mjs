@@ -1,16 +1,17 @@
 import { test, before, after } from 'node:test'
 import assert from 'node:assert/strict'
-import server from '../src/server.mjs'
+import { createTestServer } from '../src/utils.mjs'
 
-let testServer
+let server
 let baseUrl
 
 before(() => {
-	testServer = server.listen(0)
-	baseUrl = `http://localhost:${testServer.address().port}/incidents`
+	server = createTestServer()
+	server.listen(0)
+	baseUrl = `http://localhost:${server.address().port}/incidents`
 })
 
-after(() => testServer.close())
+after(() => server.close())
 
 test('insert incident', async () => {
 	const incident = {

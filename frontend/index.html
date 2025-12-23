@@ -11,13 +11,18 @@
 		<button id="newIncident">New Incident</button
 		<div>
 			<table>
-				<thead id="header">
+				<thead id="thead">
 				</thead>
-				<tbody id="content">
+				<tbody id="tbody">
 				</tbody>
 			</table>
 		</div>
 		<script type="module">
+			const getAllIncidents = async() => {
+				const res = await fetch('http://localhost:3000/incidents')
+				return JSON.parse(await res.text()).sort( (a,b) => b.id.localeCompare(a.id))
+
+			}
 			const createNewIncident = async() => {
 				const res = await fetch(
 					`http://localhost:3000/incidents`,
@@ -27,10 +32,9 @@
 						body: JSON.stringify(Object.fromEntries([["title","untitled"], ["severity", "low"]]))
 					}
 				)
-				console.log(res.status, JSON.parse(await res.text()))
-				window.location.reload()
+				console.log('createNewIncident', res.status, JSON.parse(await res.text()))
 			}
-			const patchIncident = async (event) => {
+			window.patchIncident = async (event) => {
 				const id = event.target.parentElement.parentElement.getAttribute('id')
 				const name = event.target.name
 				const value = event.target.value
@@ -42,43 +46,81 @@
 						body: JSON.stringify(Object.fromEntries([[name,value]]))
 					}
 				)
-				console.log(id, value, name, res.status)
+				console.log('patchIncident', id, {name, value}, res.status)
 			}
-			const res = await fetch('http://localhost:3000/incidents')
-			const incidents = JSON.parse(await res.text()).sort( (a,b) => b.id.localeCompare(a.id))
-			const thead = `<tr>${Object.keys(incidents[0]).slice(1).map( k => `<th>${k}</th>` ).join('')}</tr>`
-			const tbody = incidents.map(i => 
-			`<tr id="${i.id}">
 
+			const incidentToHtml = i => 
+			`
+			<tr id=${i.id}>
 			<td>${i.createdAt}</td>
-
-			<td><input name="title" value="${i.title}"></input></td>
-
-			<td><select name="severity">
+			<td>
+			<input name="title" value="${i.title}" oninput="patchIncident(event)"></input></td>
+			<td>
+			<select name="severity" onchange="patchIncident(event)">
 			<option ${i.severity === 'low'? 'selected' : ''} value="low">low</option>
 			<option ${i.severity === 'medium'? 'selected' : ''} value="medium">medium</option>
 			<option ${i.severity === 'high'? 'selected' : ''} value="high">high</option>
 			</select>
 			</td>
-
-			<td><select name="status">
+			<td>
+			<select name="status" onchange="patchIncident(event)">
 			<option ${i.status === 'open'? 'selected' : ''} value="open">open</option>
 			<option ${i.status === 'acknowledged'? 'selected' : ''} value="acknowledged">acknowledged</option>
 			<option ${i.status === 'resolved'? 'selected' : ''} value="resolved">resolved</option>
 			</select>
-
 			</td>
-			</tr>`).join('')
-			document.getElementById('header').innerHTML = thead
-			document.getElementById('content').innerHTML = tbody
-			console.log(incidents)
-			for (let i of document.getElementsByTagName('input')){
-				i.onkeyup = patchIncident
-			}
-			for (let i of document.getElementsByTagName('select')){
-				i.onchange = patchIncident
-			}
+			</tr>
+			`
+
+			let incidents = await getAllIncidents()
+			const thead = `<tr>${Object.keys(incidents[0]).slice(1).map( k => `<th>${k}</th>` ).join('')}</tr>`
+			const tbody = incidents.map(incidentToHtml).join('')
+			document.getElementById('thead').innerHTML = thead
+			document.getElementById('tbody').innerHTML = tbody
 			document.getElementById("newIncident").onclick = createNewIncident
+
+			// websocket updates
+			const handleWsIncident = (strIncident) => {
+				const incident = JSON.parse(strIncident)
+				const index = incidents.findIndex( i => i.id === incident.id) 
+
+				if (index > -1) {
+					console.log("updating incident:", incident)
+					incidents[index] = incident
+					const children = document.getElementById(incident.id).children
+					children[1].children[0].value = incident.title
+					children[2].children[0].value = incident.severity
+					children[3].children[0].value = incident.status
+
+				} else {
+					console.log("prepending incident:", incident)
+					incidents.unshift(incident)
+					const newRow = document.createElement('template')
+					newRow.innerHTML = incidentToHtml(incident)
+					document.getElementById('tbody').prepend(newRow.content)
+				}
+				console.log('incidents:', incidents)
+			}
+
+			const ws = new WebSocket('ws://localhost:9001')
+
+			ws.onopen = (event) => {
+			  console.log('Connected to WebSocket server')
+			}
+
+			ws.onmessage = (event) => {
+			  console.log('Message from WebSocket server:', event.data)
+			  handleWsIncident(event.data)
+			}
+
+			ws.onclose = (event) => {
+			  console.log('Disconnected from WebSocket server')
+			}
+
+			ws.onerror = (error) => {
+			  console.error('WebSocket error:', error)
+			}
+
 		</script>
 	</body>
 </html>

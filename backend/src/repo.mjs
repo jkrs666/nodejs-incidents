@@ -7,13 +7,15 @@ const insertIncident = async (db, incident) =>
 		.insertOne(incident)
 
 const updateIncident = async (db, id, updates) => {
-	return await db
+	const incident = await db
 		.db('app')
 		.collection('incidents')
-		.updateOne(
+		.findOneAndUpdate(
 			{ _id: new ObjectId(id) },
-			{ $set: updates }
+			{ $set: updates },
+			{ returnDocument: "after" }
 		)
+	return incident === null ? null : mapIncident(incident)
 }
 
 const getIncidentById = async (db, id) => {

@@ -1,36 +1,31 @@
 import { test, beforeEach, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
-import server from '../src/server.mjs'
+import { createTestServer } from '../src/utils.mjs'
 
-let testServer
+let server
 
-beforeEach(async () => {
-	// start server and insert initial incident
-	testServer = server.listen(0)
+beforeEach(() => {
+	server = createTestServer()
+	server.listen(0)
 })
-
-afterEach(() => testServer.close())
+afterEach(() => server.close())
 
 test('get incidents', async () => {
-	const baseUrl = `http://localhost:${testServer.address().port}/incidents`
+	const baseUrl = `http://localhost:${server.address().port}/incidents`
 	const insertReqBody = {
 		title: 'test',
 		severity: 'low',
 	}
-	const insertResponse = await fetch(
+
+	await fetch(
 		baseUrl,
 		{
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(insertReqBody)
 		})
-	const insertedId = JSON.parse(await insertResponse.text()).insertedId
 
-	const allIncidentsResponse = await fetch(
-		baseUrl,
-		{
-			method: 'GET',
-		})
+	const allIncidentsResponse = await fetch(baseUrl)
 	const allIncidents = JSON.parse(await allIncidentsResponse.text())
 
 	assert.strictEqual(allIncidentsResponse.status, 200)

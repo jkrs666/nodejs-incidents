@@ -1,4 +1,5 @@
 import { MongoClient } from 'mongodb'
+import { createServer } from '../src/server.mjs'
 
 const getBody = async (req) => {
 	const chunks = []
@@ -71,6 +72,10 @@ const createDbClient = () => {
 	return new MongoClient(connectionString)
 }
 
+const createTestServer = () =>
+	createServer(
+		{ broadcastIncident: _ => { } },
+		createDbClient
+	)
 
-
-export { getBody, validatePostIncidentRequest, validatePatchIncidentRequest, createDbClient }
+export { getBody, validatePostIncidentRequest, validatePatchIncidentRequest, createDbClient, createTestServer }
