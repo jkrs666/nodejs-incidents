@@ -31,8 +31,8 @@ const validatePostIncidentRequest = (req) => {
 	if (undefinedFields.length > 0)
 		errors.push(`undefined fields: ${undefinedFields}`)
 
-	if (typeof title !== 'string')
-		errors.push('"title" must be string')
+	if (isNullOrEmpty(title) || typeof title !== 'string')
+		errors.push('"title" must be a non-empty string')
 
 	if (typeof severity !== 'string' || !['low', 'medium', 'high'].includes(severity))
 		errors.push('"severity" must be "low", "medium" or "high"')
@@ -55,8 +55,8 @@ const validatePatchIncidentRequest = (req) => {
 	if (undefinedFields.length > 0)
 		errors.push(`undefined fields: ${undefinedFields}`)
 
-	if (!isNullOrEmpty(title) && typeof title !== 'string')
-		errors.push('"title" must be string')
+	if (!isNullOrEmpty(title) && typeof title !== 'string' || (typeof title === 'string' && title.trim().length === 0))
+		errors.push('"title" must be a non-empty string')
 
 	if (!isNullOrEmpty(severity) && (typeof severity !== 'string' || !['low', 'medium', 'high'].includes(severity)))
 		errors.push('"severity" must be "low", "medium" or "high"')
@@ -75,7 +75,7 @@ const createDbClient = () => {
 const createTestServer = () =>
 	createServer(
 		{ broadcastIncident: _ => { } },
-		createDbClient
+		createDbClient()
 	)
 
 export { getBody, validatePostIncidentRequest, validatePatchIncidentRequest, createDbClient, createTestServer }

@@ -21,6 +21,16 @@ test('invalid post incident request, undefined field', () => {
 	])
 })
 
+test('invalid post incident request, empty title', () => {
+	const errors = validatePostIncidentRequest({
+		title: '',
+		severity: 'low'
+	})
+	assert.deepStrictEqual(errors, [
+		'"title" must be a non-empty string',
+	])
+})
+
 test('invalid post incident request, invalid severity', () => {
 	const errors = validatePostIncidentRequest({
 		title: 'test',
@@ -59,6 +69,15 @@ test('invalid patch incident request, undefined field', () => {
 	})
 	assert.deepStrictEqual(errors, [
 		'undefined fields: randomField'
+	])
+})
+
+test('invalid patch incident request, invalid title', () => {
+	const errors = validatePatchIncidentRequest({
+		title: '',
+	})
+	assert.deepStrictEqual(errors, [
+		'"title" must be a non-empty string',
 	])
 })
 

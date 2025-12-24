@@ -11,7 +11,10 @@ before(() => {
 	baseUrl = `http://localhost:${server.address().port}/incidents`
 })
 
-after(() => server.close())
+after(() => {
+	server.db.close()
+	server.close()
+})
 
 test('insert incident', async () => {
 	const incident = {
@@ -27,7 +30,7 @@ test('insert incident', async () => {
 			body: JSON.stringify(incident)
 		})
 
-	const actual = JSON.parse(await response.text())
+	const actual = await response.json()
 	assert.strictEqual(response.status, 200)
 	assert.strictEqual(actual.acknowledged, true)
 	assert.match(actual.insertedId, /[a-f0-9]+/)
@@ -44,10 +47,10 @@ test('insert invalid incident', async () => {
 		})
 
 	assert.strictEqual(response.status, 400)
-	assert.deepStrictEqual(JSON.parse(await response.text()).error,
+	assert.deepStrictEqual((await response.json()).error,
 		[
 			'undefined fields: invalid',
-			'"title" must be string',
+			'"title" must be a non-empty string',
 			'"severity" must be "low", "medium" or "high"'
 		]
 	)

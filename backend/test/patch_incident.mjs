@@ -1,4 +1,4 @@
-import { test, beforeEach, afterEach } from 'node:test'
+import { test, before, after } from 'node:test'
 import assert from 'node:assert/strict'
 import repo from '../src/repo.mjs'
 import { createDbClient, createTestServer } from '../src/utils.mjs'
@@ -7,7 +7,7 @@ let server
 let baseUrl
 let initialIncident
 
-beforeEach(async () => {
+before(async () => {
 	server = createTestServer()
 	server.listen(0)
 
@@ -26,7 +26,7 @@ beforeEach(async () => {
 
 
 
-	const insertedId = JSON.parse(await response.text()).insertedId
+	const insertedId = (await response.json()).insertedId
 	const dbClient = createDbClient()
 	dbClient.connect()
 	initialIncident = await repo.getIncidentById(dbClient, insertedId)
@@ -34,7 +34,10 @@ beforeEach(async () => {
 	baseUrl = `http://localhost:${server.address().port}/incidents/${insertedId}`
 })
 
-afterEach(() => server.close())
+after(() => {
+	server.db.close()
+	server.close()
+})
 
 test('update incident', async () => {
 	const reqBody = { severity: 'high' }
@@ -47,7 +50,7 @@ test('update incident', async () => {
 		})
 
 	assert.strictEqual(response.status, 200)
-	assert.strictEqual(JSON.parse(await response.text()).severity, "high")
+	assert.strictEqual((await response.json()).severity, "high")
 })
 
 test('patch invalid incident', async () => {
@@ -61,10 +64,10 @@ test('patch invalid incident', async () => {
 		})
 
 	assert.strictEqual(response.status, 400)
-	assert.deepStrictEqual(JSON.parse(await response.text()).error,
+	assert.deepStrictEqual((await response.json()).error,
 		[
 			'undefined fields: invalid',
-			'"title" must be string',
+			'"title" must be a non-empty string',
 			'"severity" must be "low", "medium" or "high"',
 			'"status" must be "open", "acknowledged" or "resolved"',
 		]

@@ -18,9 +18,13 @@
 			</table>
 		</div>
 		<script type="module">
+			const showErrors = res => alert(res.error.join('\n'))
+			
 			const getAllIncidents = async() => {
 				const res = await fetch('http://localhost:3000/incidents')
-				return JSON.parse(await res.text()).sort( (a,b) => b.id.localeCompare(a.id))
+				const resBody = await res.json()
+				res.status !== 200 && showErrors(resBody)
+				return resBody.sort( (a,b) => b.id.localeCompare(a.id))
 
 			}
 			const createNewIncident = async() => {
@@ -32,7 +36,9 @@
 						body: JSON.stringify(Object.fromEntries([["title","untitled"], ["severity", "low"]]))
 					}
 				)
-				console.log('createNewIncident', res.status, JSON.parse(await res.text()))
+				const resBody = await res.json()
+				console.log('createNewIncident', res.status, resBody)
+				res.status !== 200 && showErrors(resBody)
 			}
 			window.patchIncident = async (event) => {
 				const id = event.target.parentElement.parentElement.getAttribute('id')
@@ -47,6 +53,9 @@
 					}
 				)
 				console.log('patchIncident', id, {name, value}, res.status)
+				const resBody = await res.json()
+				console.log(resBody)
+				res.status !== 200 && showErrors(resBody)
 			}
 
 			const incidentToHtml = i => 

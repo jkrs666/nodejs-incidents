@@ -1,14 +1,17 @@
-import { test, beforeEach, afterEach } from 'node:test'
+import { test, before, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { createTestServer } from '../src/utils.mjs'
 
 let server
 
-beforeEach(() => {
+before(() => {
 	server = createTestServer()
 	server.listen(0)
 })
-afterEach(() => server.close())
+after(() => {
+	server.db.close()
+	server.close()
+})
 
 test('get incidents', async () => {
 	const baseUrl = `http://localhost:${server.address().port}/incidents`
@@ -26,7 +29,7 @@ test('get incidents', async () => {
 		})
 
 	const allIncidentsResponse = await fetch(baseUrl)
-	const allIncidents = JSON.parse(await allIncidentsResponse.text())
+	const allIncidents = await allIncidentsResponse.json()
 
 	assert.strictEqual(allIncidentsResponse.status, 200)
 	allIncidents.forEach(i => {
