@@ -1,7 +1,7 @@
 import { createServer } from 'node:http'
 import fs from 'node:fs'
 
-const hostname = 'localhost'
+const hostname = '0.0.0.0'
 const port = 3001
 
 const html = fs.readFileSync('index.html', 'utf8')

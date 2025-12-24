@@ -68,7 +68,7 @@ const validatePatchIncidentRequest = (req) => {
 }
 
 const createDbClient = () => {
-	const connectionString = 'mongodb://root:example@127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=nodejs_incidents'
+	const connectionString = process.env.MONGO_URL || 'mongodb://root:example@localhost:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=nodejs_incidents'
 	return new MongoClient(connectionString)
 }
 

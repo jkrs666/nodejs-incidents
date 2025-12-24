@@ -1,4 +1,29 @@
 services:
+  frontend:
+    image: node:24
+    ports:
+      - 3001:3001
+    volumes:
+      - ./frontend:/app
+    networks:
+      - incinet
+    working_dir: /app
+    command: sh -c "npm install && npm start"
+
+  backend:
+    image: node:24
+    ports:
+      - 3000:3000
+      - 9001:9001 #websocket
+    volumes:
+      - ./backend:/app
+    networks:
+      - incinet
+    working_dir: /app
+    environment:
+        - MONGO_URL=mongodb://root:example@mongo:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=nodejs_incidents
+    command: sh -c "npm install && npm start"
+    
   mongo:
     image: mongo
     restart: always
@@ -9,18 +34,13 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: example
     volumes:
       - mongo-data:/data/db
-
-  mongo-express:
-    image: mongo-express
-    restart: always
-    ports:
-      - 8081:8081
-    environment:
-      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
-      ME_CONFIG_BASICAUTH_ENABLED: true
-      ME_CONFIG_BASICAUTH_USERNAME: mongoexpressuser
-      ME_CONFIG_BASICAUTH_PASSWORD: mongoexpresspass
+    networks:
+      - incinet
 
 
 volumes:
   mongo-data:
+
+networks:
+  incinet:
+    driver: bridge

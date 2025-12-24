@@ -2,7 +2,7 @@ import { createServer } from './src/server.mjs'
 import { createDbClient } from './src/utils.mjs'
 import wss from './src/websocket.mjs'
 
-const hostname = 'localhost'
+const hostname = '0.0.0.0'
 const port = 3000
 
 createServer(wss, createDbClient)
