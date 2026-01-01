@@ -82,7 +82,7 @@
 			`
 
 			let incidents = await getAllIncidents()
-			const thead = `<tr>${Object.keys(incidents[0]).slice(1).map( k => `<th>${k}</th>` ).join('')}</tr>`
+			const thead = `<tr>${['created at', 'title', 'severity', 'status'].map( k => `<th>${k}</th>` ).join('')}</tr>`
 			const tbody = incidents.map(incidentToHtml).join('')
 			document.getElementById('thead').innerHTML = thead
 			document.getElementById('tbody').innerHTML = tbody
