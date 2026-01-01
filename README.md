@@ -88,3 +88,44 @@ accepts connections only from localhost:3001 (frontend)
 ### ./backend/index.mjs
 
 creates db, websocket server and starts backend server on port 3000
+
+# design decisions
+
+## infrastructure
+- **no custom dockerfiles**: used official `node:24` images directly with volume mounts. this keeps the setup simple, allows instant code changes without rebuilding images.
+
+- **separate WebSocket server**: WebSocket runs on port 9001 instead of upgrading HTTP connections. this separates concerns and makes the code easier to understand and test.
+
+## backend
+- **no framework**: used Node.js native `http` module instead of external libraries
+
+- **manual routing**: simple regex-based router instead of a routing library. sufficient for 3 endpoints and more transparent.
+
+- **mongo DB ObjectId for timestamps**: used the embedded timestamp in mongo ObjectId for `createdAt` instead of storing a separate field. this eliminates redundancy and guarantees uniqueness.
+
+- **request size limit**: limited request body to 100KB to prevent abuse
+
+- **validation approach**: validates against immutable fields (`id`, `createdAt`, `status` on POST) to prevent client manipulation
+
+## frontend
+- **simple "New Incident" button**: creates incidents with default values (title: "untitled", severity: "low") instead of a form. users can edit inline immediately. this reduces UI complexity and makes creating incidents faster.
+
+- **no WebSocket delays**: updates are applied immediately without debouncing/throttling for a true real-time feel. in a production app with high traffic, this might need throttling.
+
+- **inline editing**: table cells are directly editable with input/select elements, avoiding modal dialogs or separate edit pages.
+
+- **client-side sorting**: Incidents are sorted on the frontend. for small datasets this is fine. larger datasets would need server-side sorting.
+
+## security
+- **CORS restrictions**: Backend and WebSocket only accept connections from `http://localhost:3001` to prevent unauthorized access.
+
+## testing
+- **mock WebSocket in tests**: created a mock `broadcastIncident` function in test server to avoid WebSocket dependency during API tests.
+
+# assumptions
+
+- **single user**: no concurrent editing conflicts handled (last write wins)
+- **small dataset**: no pagination on incidents list
+- **development environment**: hardcoded localhost URLs, no HTTPS
+- **mongo DB always available**: no retry logic for database connections
+- **WebSocket reliability**: no automatic reconnection if connection drops
