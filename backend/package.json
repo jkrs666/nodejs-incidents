@@ -12,7 +12,7 @@
   },
   "license": "ISC",
   "author": "",
-  "type": "modul",
+  "type": "module",
   "main": "index.mjs",
   "scripts": {
     "test": "node --test test/*.mjs",

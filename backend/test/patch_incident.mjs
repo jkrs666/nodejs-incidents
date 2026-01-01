@@ -74,3 +74,19 @@ test('patch invalid incident', async () => {
 	)
 })
 
+test('not found incident', async () => {
+	const incident = { title: "not found" }
+	const response = await fetch(
+		`http://localhost:${server.address().port}/incidents/777777777777777777777777`,
+		{
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(incident)
+		})
+
+	assert.strictEqual(response.status, 404)
+	assert.deepStrictEqual((await response.json()).error,
+		'incident 777777777777777777777777 not found'
+	)
+})
+

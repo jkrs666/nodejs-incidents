@@ -37,6 +37,12 @@ const createServer = (wss, db) => {
 		}
 
 		const updatedIncident = await repo.updateIncident(server.db, id, patchBody)
+
+		if (updatedIncident === null) {
+			res.statusCode = 404
+			return { error: `incident ${id} not found` }
+		}
+
 		server.wss.broadcastIncident(updatedIncident)
 		return updatedIncident
 	}

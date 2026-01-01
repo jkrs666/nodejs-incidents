@@ -26,9 +26,10 @@ wss.on('connection', (ws, req) => {
 wss.broadcastIncident = (incident) => {
 	const json = JSON.stringify(incident)
 	wss.clients.forEach(client => {
-		if (client.readyState === WebSocket.OPEN)
+		if (client.readyState === WebSocket.OPEN) {
 			console.log(json)
-		client.send(json)
+			client.send(json)
+		}
 	})
 }
 
